@@ -1,12 +1,9 @@
 class Main:
 
-    def __init__(self, ip_addr, mask, ident_number):
+    def __init__(self, ip_addr):
         self.ip_addr = ip_addr
-        self.mask = mask
-        self.ident_number = ident_number
 
     __read_logs_file = '/var/log/auth.log'
-    __write_file = 'data/info_found_in_the_logs.txt'
 
     # Открываем файл - logs
     def open_the_log_for_reading(self):
@@ -22,33 +19,12 @@ class Main:
         except Exception as e:
             print('Сведения об исключении:  def open_the_log_for_reading(self) -  ', e)
 
-    # Готовис файл для записи
-    def write_file(self):
-        try:
-            write_file = open(self.__write_file, mode='a', encoding='UTF-8')
-            return write_file
-        except FileNotFoundError as e:
-            print('Файл или директория не существует! ', e)
-        except UnicodeError as e:
-            print('Ошибка, связанная с кодированием / раскодированием unicode в строках. ', e)
-        except IsADirectoryError as e:
-            print('Ошибка, ожидался файл, но это директория. ', e)
-        except Exception as e:
-            print('Сведения об исключении:  def open_the_log_for_reading(self) -  ', e)
-
-    # Закрываем открытий файл
-    def close_file(self, file):
-        try:
-            file.close()
-        except Exception as e:
-            print('Ошибка при закрытии файла ', e)
-
     # Ищем строку в логе по входным данным и возвращаем номер найденной строки
     def search_numb_line(self):
         try:
             search_number_line = None
             for num, line in enumerate(self.open_the_log_for_reading(), 0):
-                if self.ip_addr in line and self.mask in line and self.ident_number in line:
+                if self.ip_addr in line:
                     search_number_line = num
             return search_number_line
         except Exception as e:
@@ -91,8 +67,26 @@ class Main:
         try:
             for num, line in enumerate(self.open_the_log_for_reading(), 0):
                 if (num > min_) and (num < max_):
-                    self.write_file().write(line)
-            self.close_file(self.open_the_log_for_reading())
-            self.close_file(self.write_file())
+                    print(line)
+            self.open_the_log_for_reading().close()
         except Exception as e:
             print("Сведения об исключении: def write_lines_to_file(self, min_, max_) - ", e)
+
+
+if __name__ == '__main__':
+    ip = input('Введите ip-адрес: ')
+
+    obj = Main(ip)
+    print('==============================')
+
+    num_line_ = obj.search_numb_line()
+    print("Номер найденной строки - " + str(num_line_))
+
+    min_numb_line = obj.min_num(num_line_)
+    print("Минимальний номер строки - " + str(min_numb_line))
+
+    max_numb_line = obj.max_num(num_line_)
+    print("Максимальеый номер строки - " + str(max_numb_line))
+
+    obj.write_info_to_file(min_numb_line, max_numb_line)
+    print('Записали найденные строки в файл - info_found_in_the_logs.txt')
